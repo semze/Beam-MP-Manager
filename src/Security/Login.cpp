@@ -1,0 +1,170 @@
+/*
+ Copyright (C) 2024 BeamMP Ltd., BeamMP team and contributors.
+ Licensed under AGPL-3.0 (or later), see <https://www.gnu.org/licenses/>.
+ SPDX-License-Identifier: AGPL-3.0-or-later
+*/
+
+
+#include "Http.h"
+#include "Logger.h"
+#include "Options.h"
+#include <filesystem>
+#include <fstream>
+#include <nlohmann/json.hpp>
+
+namespace fs = std::filesystem;
+std::string PublicKey;
+std::string PrivateKey;
+extern bool LoginAuth;
+extern std::string Username;
+extern std::string UserRole;
+extern int UserID;
+
+void UpdateKey(const char* newKey) {
+    if (newKey && std::isalnum(newKey[0])) {
+        PrivateKey = newKey;
+        std::ofstream Key("key");
+        if (Key.is_open()) {
+            Key << newKey;
+            Key.close();
+        } else
+            fatal("Cannot write to disk!");
+    } else if (fs::exists("key")) {
+        remove("key");
+    }
+}
+
+/// "username":"value","password":"value"
+/// "Guest":"Name"
+/// "pk":"private_key"
+
+std::string GetFail(const std::string& R) {
+    std::string DRet = R"({"success":false,"message":)";
+    DRet += "\"" + R + "\"}";
+    error(R);
+    return DRet;
+}
+
+std::string Login(const std::string& fields) {
+    if (fields == "LO") {
+        Username = "";
+        UserRole = "";
+        UserID = -1;
+        LoginAuth = false;
+        UpdateKey(nullptr);
+        return "";
+    }
+    if (options.offline) {
+        // Offline mode: never contact the BeamMP auth servers. Report a local guest identity so the
+        // in-game UI lets you continue to direct connect. Private servers decide whether to accept it.
+        LoginAuth = true;
+        Username = options.offline_name;
+        UserRole = "GUEST";
+        UserID = -1;
+        info("Offline mode: using local name '" + Username + "' (BeamMP login skipped)");
+        nlohmann::json r = { { "success", true }, { "message", "Offline mode" }, { "username", Username }, { "role", UserRole } };
+        return r.dump();
+    }
+    info("Attempting to authenticate...");
+    try {
+        std::string Buffer = HTTP::Post("https://auth.beammp.com/userlogin", fields);
+
+        if (Buffer.empty()) {
+            return GetFail("Failed to communicate with the auth system!");
+        }
+
+        nlohmann::json d = nlohmann::json::parse(Buffer, nullptr, false);
+
+        if (Buffer.at(0) != '{' || d.is_discarded()) {
+            error(Buffer);
+            return GetFail("Invalid answer from authentication servers, please try again later!");
+        }
+        if (d.contains("success") && d["success"].get<bool>()) {
+            LoginAuth = true;
+            if (d.contains("username")) {
+                Username = d["username"].get<std::string>();
+            }
+            if (d.contains("role")) {
+                UserRole = d["role"].get<std::string>();
+            }
+            if (d.contains("id")) {
+                UserID = d["id"].get<int>();
+            }
+            if (d.contains("private_key")) {
+                UpdateKey(d["private_key"].get<std::string>().c_str());
+            }
+            if (d.contains("public_key")) {
+                PublicKey = d["public_key"].get<std::string>();
+            }
+            info("Authentication successful!");
+        } else
+            info("Authentication failed!");
+        if (d.contains("message")) {
+            d.erase("private_key");
+            d.erase("public_key");
+            debug("Authentication result: " + d["message"].get<std::string>());
+            return d.dump();
+        }
+        return GetFail("Invalid message parsing!");
+    } catch (const std::exception& e) {
+        return GetFail(e.what());
+    }
+}
+
+void CheckLocalKey() {
+    if (options.offline) {
+        LoginAuth = true;
+        Username = options.offline_name;
+        UserRole = "GUEST";
+        info("Offline mode: skipping BeamMP login");
+        return;
+    }
+    if (fs::exists("key") && fs::file_size("key") < 100) {
+        std::ifstream Key("key");
+        if (Key.is_open()) {
+            auto Size = fs::file_size("key");
+            std::string Buffer(Size, 0);
+            Key.read(&Buffer[0], Size);
+            Key.close();
+
+            for (char& c : Buffer) {
+                if (!std::isalnum(c) && c != '-') {
+                    UpdateKey(nullptr);
+                    return;
+                }
+            }
+
+            Buffer = HTTP::Post("https://auth.beammp.com/userlogin", R"({"pk":")" + Buffer + "\"}");
+
+            nlohmann::json d = nlohmann::json::parse(Buffer, nullptr, false);
+
+            if (Buffer.empty() || Buffer.at(0) != '{' || d.is_discarded()) {
+                error(Buffer);
+                info("Invalid answer from authentication servers (BeamMP backend may be down). Continuing without auto-login. Use --offline for private direct-connect servers.");
+                UpdateKey(nullptr);
+                return;
+            }
+            if (d.contains("success") && d["success"].get<bool>()) {
+                LoginAuth = true;
+                UpdateKey(d["private_key"].get<std::string>().c_str());
+                PublicKey = d["public_key"].get<std::string>();
+                if (d.contains("username")) {
+                    Username = d["username"].get<std::string>();
+                }
+                if (d.contains("role")) {
+                    UserRole = d["role"].get<std::string>();
+                }
+                if (d.contains("id")) {
+                    UserID = d["id"].get<int>();
+                }
+            } else {
+                info("Auto-Authentication unsuccessful please re-login!");
+                UpdateKey(nullptr);
+            }
+        } else {
+            warn("Could not open saved key!");
+            UpdateKey(nullptr);
+        }
+    } else
+        UpdateKey(nullptr);
+}
