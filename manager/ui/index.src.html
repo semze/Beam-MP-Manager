@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>BeamMP Manager</title>
+<link rel="icon" type="image/svg+xml" href="%%FAVICON%%">
+<style>
+:root{
+  --bg:#0f1219; --rail:#131722; --panel:#171c27; --raised:#1f2533; --line:#272e3f; --soft:#1e2433;
+  --text:#e9ecf4; --muted:#8f99b0; --faint:#5f6a82;
+  --accent:#ffc933; --accent-hi:#ffd75e; --on-accent:#1a1300;
+  --live:#3fd4ff; --danger:#ff6b81; --danger-bg:rgba(255,107,129,.12); --warn:#ffcf5c; --warn-bg:rgba(255,207,92,.09);
+  --shadow:0 18px 50px rgba(0,0,0,.45);
+  --r:12px;
+  --mono:"Cascadia Mono","Cascadia Code",Consolas,"SF Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --bg:#eef0f5; --rail:#e3e6ee; --panel:#ffffff; --raised:#f2f4f8; --line:#d2d7e3; --soft:#e4e8f0;
+    --text:#131a29; --muted:#59647b; --faint:#8a94a8;
+    --accent:#f5b800; --accent-hi:#ffc524; --on-accent:#1a1300;
+    --live:#0a7ea8; --danger:#cf2449; --danger-bg:rgba(207,36,73,.09); --warn:#8a5d00; --warn-bg:rgba(245,184,0,.14);
+    --shadow:0 18px 50px rgba(20,30,60,.22);
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg.i.fill{fill:currentColor;stroke:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;border-radius:10px;padding:8px 14px;background:var(--raised);display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:background .12s,transform .06s,box-shadow .12s}
+button:hover{background:var(--soft);box-shadow:inset 0 0 0 1px var(--line)}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.pitem:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--on-accent);font-weight:650}
+button.primary:hover{background:var(--accent-hi);box-shadow:none}
+button.danger{background:var(--danger-bg);color:var(--danger)}
+button.danger:hover{background:var(--danger-bg);box-shadow:inset 0 0 0 1px var(--danger)}
+button.ghost{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+button.ghost:hover{background:var(--raised)}
+button.small{padding:5px 10px;font-size:12.5px;border-radius:8px;gap:6px}
+button.small svg.i{width:15px;height:15px}
+button.icon{padding:8px;border-radius:10px}
+input,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;outline:none;transition:border-color .12s,box-shadow .12s}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;outline:none;min-width:0;max-width:100%;transition:border-color .12s,box-shadow .12s}
+select:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+select.full{width:100%}
+input[type=checkbox]{width:auto}
+textarea{resize:vertical;min-height:84px}
+label.f{display:block;color:var(--muted);font-size:13px;font-weight:550;margin:16px 0 6px}
+.hint{color:var(--muted);font-size:12.5px;margin-top:6px;max-width:64ch}
+a{color:var(--live)}
+
+/* ---------- rail ---------- */
+#rail{width:288px;min-width:288px;background:var(--rail);border-right:1px solid var(--line);display:flex;flex-direction:column;height:100%}
+.brand{padding:20px 20px 14px;display:flex;align-items:center;gap:12px}
+.brand svg{width:40px;height:40px;flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.brand b{display:block;font-size:16px;font-weight:650;letter-spacing:-.01em;line-height:1.15}
+.brand small{color:var(--muted);font-size:12px}
+.railhead{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 6px;color:var(--muted);font-size:13px;font-weight:550}
+#plist{flex:1;overflow:auto;padding:4px 10px 10px}
+.pitem{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;cursor:pointer;margin-bottom:2px;border:1px solid transparent;transition:background .12s}
+.pitem:hover{background:var(--raised)}
+.pitem.active{background:var(--panel);border-color:var(--line);box-shadow:0 1px 0 rgba(255,255,255,.03) inset}
+.pitem .meta{min-width:0;flex:1}
+.pitem .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pitem .sub{color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:6px}
+.pitem .sub .live{color:var(--live);font-weight:600}
+.pitem .sub span+span{padding-left:8px;border-left:1px solid var(--line)}
+.rail-foot{padding:12px;border-top:1px solid var(--line);display:flex;gap:8px}
+.rail-foot .primary{flex:1;justify-content:center}
+
+/* profiles / servers switch + server setup */
+.modes{display:flex;margin:0 14px 4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.mode{flex:1;justify-content:center;background:transparent;color:var(--muted);font-weight:600;padding:6px 10px;border-radius:9px}
+.mode:hover{background:transparent;box-shadow:none;color:var(--text)}
+.mode.active{background:var(--panel);color:var(--text);box-shadow:0 0 0 1px var(--line)}
+.chk{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--soft)}
+.chk:last-child{border-bottom:0}
+.chk .mark{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none;color:var(--on-accent)}
+.chk.ok .mark{background:var(--accent);border-color:var(--accent)}
+.chk .mark svg{width:14px;height:14px;stroke-width:3}
+.chk .t{flex:1;min-width:0}
+.chk .t>b{display:block}
+.chk .t span{color:var(--muted);font-size:12.5px}
+.chk.bad .t span{color:var(--danger)}
+.chk .act{display:flex;gap:8px;flex:none}
+.addr{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);margin-top:10px}
+.addr code{font:600 18px var(--mono);flex:1;min-width:0;overflow-wrap:anywhere}
+.addr small{display:block;color:var(--muted);font-size:12.5px;font-weight:400;font-family:inherit}
+.addr.best{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--bg))}
+.steps{margin:10px 0 0;padding-left:20px}
+.steps li{margin:5px 0}
+.badge{font-size:11.5px;font-weight:650;padding:2px 8px;border-radius:999px;background:var(--raised);color:var(--muted);white-space:nowrap}
+.badge.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--text)}
+.pick{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:var(--r);margin-top:12px}
+.pick label{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--soft);cursor:pointer;overflow-wrap:anywhere}
+.pick label:last-child{border-bottom:0}
+.g3{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+/* glyph avatars */
+.av{position:relative;flex:none;width:40px;height:40px}
+.av svg{width:100%;height:100%;display:block;border-radius:28%}
+.av.big{width:92px;height:92px}
+.av.run svg{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--live)}
+.av .pip{position:absolute;right:-3px;bottom:-3px;width:12px;height:12px;border-radius:50%;background:var(--live);box-shadow:0 0 0 2px var(--rail)}
+.pitem.active .av .pip{box-shadow:0 0 0 2px var(--panel)}
+.av.big .pip{width:16px;height:16px;right:-4px;bottom:-4px;box-shadow:0 0 0 3px var(--bg)}
+@media (prefers-reduced-motion:no-preference){.av.run .pip{animation:pulse 2s ease-out infinite}}
+@keyframes pulse{0%{outline:0 solid color-mix(in srgb,var(--live) 55%,transparent)}70%{outline:7px solid transparent}100%{outline:7px solid transparent}}
+.av.run .pip{outline-offset:0}
+
+/* ---------- main ---------- */
+#main{flex:1;overflow:auto;padding:28px 36px 56px;min-width:0;position:relative}
+.wrap{max-width:980px;margin:0 auto}
+.head{display:flex;gap:22px;align-items:center;margin-bottom:26px;flex-wrap:wrap}
+.head h1{margin:0;font-size:30px;line-height:1.1;font-weight:680;letter-spacing:-.025em;word-break:break-word}
+.facts{display:flex;gap:6px 18px;margin-top:10px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.facts span{display:inline-flex;align-items:center;gap:6px}
+.facts .state{font-weight:650}
+.facts .state.run{color:var(--live)}
+.facts .dotl{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.facts .state.run .dotl{background:var(--live)}
+.actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+button.play{padding:12px 28px;font-size:15px;border-radius:12px;min-width:132px;justify-content:center}
+button.play.primary{box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 28%,transparent)}
+.seg{display:inline-flex;background:var(--rail);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px;margin-bottom:20px}
+.tab{padding:7px 16px;border-radius:9px;background:transparent;color:var(--muted);font-weight:550}
+.tab:hover{background:transparent;box-shadow:none;color:var(--text)}
+.tab.active{background:var(--panel);color:var(--text);box-shadow:0 0 0 1px var(--line),0 2px 8px rgba(0,0,0,.18)}
+.tab .n{color:var(--faint);font-weight:500;font-size:12.5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:20px}
+.row{display:flex;gap:10px;align-items:center}
+
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search{position:relative;flex:1;min-width:180px;max-width:300px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--faint);width:16px;height:16px}
+.search input{padding-left:34px}
+.sp{flex:1}
+.dz{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line);border-radius:var(--r);padding:13px 16px;color:var(--muted);margin-bottom:14px;transition:border-color .12s,background .12s,color .12s}
+.dz svg{color:var(--accent)}
+.dz span{flex:1}
+.dz.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent);color:var(--text)}
+.mod{display:flex;align-items:center;gap:14px;padding:10px 14px 10px 12px;border-bottom:1px solid var(--soft)}
+.mod:last-child{border-bottom:0}
+.mod:hover{background:color-mix(in srgb,var(--raised) 55%,transparent)}
+.mod .ic{width:34px;height:34px;border-radius:9px;background:var(--raised);display:grid;place-items:center;color:var(--muted);flex:none}
+.mod.on .ic{color:var(--accent)}
+.mod .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.mod .nm i{font-style:normal;color:var(--faint)}
+.mod .sz{color:var(--muted);font-size:12.5px;width:72px;text-align:right;font-variant-numeric:tabular-nums}
+.mod.off .nm{color:var(--muted)}
+.mod .rm{opacity:0;transition:opacity .12s}
+.mod:hover .rm,.mod .rm:focus-visible{opacity:1}
+.switch{position:relative;width:40px;height:24px;flex:none;display:block}
+.switch input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.16s}
+.switch span:before{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.16s;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span:before{transform:translateX(16px)}
+.switch input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.switch input:disabled{cursor:not-allowed}.switch input:disabled+span{opacity:.45}
+pre#log{background:color-mix(in srgb,var(--bg) 70%,#000);color:var(--text);border:1px solid var(--line);border-radius:var(--r);padding:16px;height:min(62vh,640px);overflow:auto;font:12.5px/1.6 var(--mono);white-space:pre-wrap;margin:0}
+.empty{display:grid;place-items:center;text-align:center;padding:38px 20px;color:var(--muted);gap:6px}
+.empty h2{color:var(--text);margin:0;font-size:22px;letter-spacing:-.015em}
+.empty p{margin:0 0 12px;max-width:46ch}
+.hero{height:calc(100vh - 120px);align-content:center}
+.hero svg.big{width:132px;height:132px;margin-bottom:14px}
+@media (prefers-reduced-motion:no-preference){
+  .hero svg.big .beam{stroke-dasharray:700;stroke-dashoffset:700;animation:draw 1.3s cubic-bezier(.3,.7,.2,1) .15s forwards}
+  .hero svg.big .nodes{opacity:0;animation:fade .5s ease-out .9s forwards}
+}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fade{to{opacity:1}}
+.banner{display:flex;gap:12px;align-items:flex-start;background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);color:var(--warn);padding:11px 14px;border-radius:var(--r);margin-bottom:18px}
+.banner svg{margin-top:2px}
+.banner div{color:var(--text)}
+.g2{display:grid;grid-template-columns:1fr 200px;gap:14px 18px}
+.sechead{font-weight:650;margin:0 0 2px}
+.divider{height:1px;background:var(--soft);margin:22px 0 18px}
+
+/* drag overlay */
+#dropveil{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(3px);display:none;place-items:center;z-index:15;pointer-events:none}
+#dropveil.show{display:grid}
+#dropveil div{border:2px dashed var(--accent);border-radius:20px;padding:44px 64px;text-align:center;font-size:17px;font-weight:600;background:var(--panel)}
+#dropveil small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:4px}
+
+/* modal + toast */
+#modalbg{position:fixed;inset:0;background:rgba(5,8,14,.62);display:none;place-items:center;z-index:20}
+#modalbg.show{display:grid}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;width:min(500px,92vw);max-height:90vh;overflow:auto;box-shadow:var(--shadow)}
+@media (prefers-reduced-motion:no-preference){.modal{animation:pop .16s ease-out}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.modal h3{margin:0 0 4px;font-size:18px;letter-spacing:-.01em}
+.modal .btns{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.check{display:flex;gap:10px;align-items:center;margin-top:16px;color:var(--text)}
+#toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:30}
+.toast{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);padding:10px 14px;border-radius:10px;max-width:380px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:flex-start}
+.toast.err{border-left-color:var(--danger)}
+@media (prefers-reduced-motion:no-preference){.toast{animation:pop .18s ease-out}}
+@media (max-width:860px){#rail{width:224px;min-width:224px}#main{padding:20px 20px 48px}.g2,.g3{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--faint);background-clip:content-box;border:3px solid transparent}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 256 256">
+%%LOGO%%
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M18 7h2M4 17h3M12 17h8"/><circle cx="15.5" cy="7" r="2.3"/><circle cx="9.5" cy="17" r="2.3"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.2v13.6a.6.6 0 0 0 .9.5l10.8-6.8a.6.6 0 0 0 0-1L8.9 4.7a.6.6 0 0 0-.9.5z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 19h14"/></symbol>
+    <symbol id="i-import" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="10" height="10" rx="2"/><path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></symbol>
+    <symbol id="i-term" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 10l3 2.5L7 15M12.5 16H17"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-port" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 11v2M11 11v2M15 11v2"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.7 5.4 3.7 8.5S14.5 17.9 12 20.5M12 3.5C9.5 6.1 8.3 8.9 8.3 12s1.2 5.9 3.7 8.5"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4M4 5v4h4M4 13a8 8 0 0 0 14.5 4M20 19v-4h-4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5M16 5.5a3 3 0 0 1 0 6M18 14.5c1.7.6 2.7 2 3 4.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-tune" viewBox="0 0 24 24"><path d="M5 12h14M5 12l3-3M5 12l3 3"/></symbol>
+  </defs>
+</svg>
+
+<aside id="rail">
+  <div class="brand">
+    <svg viewBox="0 0 256 256" aria-hidden="true"><use href="#logo"/></svg>
+    <div><b>BeamMP Manager</b><small id="ver"></small></div>
+  </div>
+  <div class="modes" role="tablist" aria-label="Section">
+    <button class="mode active" role="tab" data-m="profiles">Profiles</button>
+    <button class="mode" role="tab" data-m="servers">Servers</button>
+  </div>
+  <div class="railhead"><span id="railTitle">Profiles</span></div>
+  <div id="plist" role="list"></div>
+  <div class="rail-foot">
+    <button class="primary" id="btnNew"><svg class="i"><use href="#i-plus"/></svg>New profile</button>
+    <button class="icon ghost" id="btnSettings" title="Settings" aria-label="Settings"><svg class="i"><use href="#i-sliders"/></svg></button>
+  </div>
+</aside>
+<main id="main"></main>
+<div id="dropveil"><div id="dropveilbox">Drop .zip files to add them<small></small></div></div>
+<div id="modalbg"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+"use strict";
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ico = (n, cls="") => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+let state = {profiles: [], servers: []};
+let selected = store.get("bmm.selected");
+let tab = "mods";
+let mods = [];
+let modFilter = "";
+let logTimer = null;
+let mode = store.get("bmm.mode") === "servers" ? "servers" : "profiles";
+let selectedS = store.get("bmm.selectedS");
+let stab = "connect";
+let smods = [];
+let pendingStart = null;   // server id waiting for BeamMP-Server to finish downloading
+let lastSetupKey = "";
+
+async function api(method, path, body, raw) {
+  const opt = {method, headers: {"X-BMM": "1"}};
+  if (raw !== undefined) { opt.body = raw; opt.headers["Content-Type"] = "application/octet-stream"; }
+  else if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+  const r = await fetch(path, opt);
+  let j = {};
+  try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error(j.error || ("Request failed (" + r.status + ")"));
+  return j;
+}
+function toast(msg, err) {
+  const t = document.createElement("div");
+  t.className = "toast" + (err ? " err" : "");
+  t.innerHTML = (err ? '<span style="color:var(--danger)">' + ico("alert") + "</span>" : "") + "<span></span>";
+  t.lastChild.textContent = msg;
+  $("#toasts").appendChild(t);
+  setTimeout(() => t.remove(), err ? 6500 : 3400);
+}
+const guard = fn => async (...a) => { try { await fn(...a); } catch (e) { toast(e.message, true); } };
+
+/* ---- every profile gets its own little soft-body lattice, generated from its id ---- */
+function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+function glyph(id, cls) {
+  const r = rng(hash(id)), hue = Math.floor(r() * 360);
+  const n = 6 + Math.floor(r() * 3), rot = r() * Math.PI * 2, pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = rot + i * Math.PI * 2 / n + (r() - .5) * .5, rad = 18 + r() * 11;
+    pts.push([32 + Math.cos(a) * rad, 32 + Math.sin(a) * rad]);
+  }
+  const c = [32 + (r() - .5) * 8, 32 + (r() - .5) * 8];
+  let d = "";
+  pts.forEach((p, i) => { const q = pts[(i + 1) % n]; d += `M${p[0].toFixed(1)} ${p[1].toFixed(1)}L${q[0].toFixed(1)} ${q[1].toFixed(1)}`; });
+  const spokes = new Set(); const k = 3 + Math.floor(r() * 2);
+  while (spokes.size < k) spokes.add(Math.floor(r() * n));
+  let inner = "";
+  spokes.forEach(i => { inner += `M${c[0].toFixed(1)} ${c[1].toFixed(1)}L${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)}`; });
+  const ch = Math.floor(r() * n); inner += `M${pts[ch][0].toFixed(1)} ${pts[ch][1].toFixed(1)}L${pts[(ch + 2) % n][0].toFixed(1)} ${pts[(ch + 2) % n][1].toFixed(1)}`;
+  const plate = `hsl(${hue} 36% 17%)`, edge = `hsl(${hue} 40% 29%)`, beam = `hsl(${hue} 72% 84%)`, hot = `hsl(${(hue + 40) % 360} 96% 62%)`;
+  const nodes = pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${plate}" stroke="${beam}" stroke-width="1.7"/>`).join("");
+  return `<svg viewBox="0 0 64 64" class="${cls || ""}" aria-hidden="true"><rect x=".5" y=".5" width="63" height="63" rx="17" fill="${plate}" stroke="${edge}"/>
+    <path d="${d}" fill="none" stroke="${beam}" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${inner}" fill="none" stroke="${beam}" stroke-opacity=".55" stroke-width="1.8" stroke-linecap="round"/>${nodes}
+    <circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="4.6" fill="${hot}"/></svg>`;
+}
+function avatar(p, big) {
+  return `<div class="av ${big ? "big" : ""} ${p.running ? "run" : ""}">${glyph(p.id)}${p.running ? '<span class="pip"></span>' : ""}</div>`;
+}
+function fmtSize(n) {
+  if (n > 1048576) return (n / 1048576).toFixed(1) + " MB";
+  if (n > 1024) return Math.round(n / 1024) + " KB";
+  return n + " B";
+}
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const cur = () => state.profiles.find(p => p.id === selected);
+const curS = () => (state.servers || []).find(s => s.id === selectedS);
+const sb = () => state.serverBinary || {};
+
+async function refresh(full) {
+  state = await api("GET", "/api/state");
+  if (!cur()) selected = state.profiles[0] ? state.profiles[0].id : null;
+  if (!curS()) selectedS = state.servers[0] ? state.servers[0].id : null;
+  renderSide();
+  if (full) await renderMain(); else { renderHeadStatus(); watchServerSetup(); }
+}
+
+function renderSide() {
+  $("#ver").textContent = "Version " + state.version;
+  const list = $("#plist");
+  if (mode === "servers") {
+    list.innerHTML = state.servers.map(s => `
+      <div class="pitem ${s.id === selectedS ? "active" : ""}" data-id="${esc(s.id)}" role="listitem" tabindex="0">
+        ${avatar(s)}
+        <div class="meta"><div class="nm">${esc(s.name)}</div>
+        <div class="sub">${s.running ? '<span class="live">Online</span>' : "Offline"}<span>Port ${s.port}</span></div></div>
+      </div>`).join("") || '<div class="hint" style="padding:10px 12px">No servers yet.</div>';
+    list.querySelectorAll(".pitem").forEach(el => {
+      el.onclick = () => selectServer(el.dataset.id);
+      el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectServer(el.dataset.id); } };
+    });
+    return;
+  }
+  list.innerHTML = state.profiles.map(p => `
+    <div class="pitem ${p.id === selected ? "active" : ""}" data-id="${esc(p.id)}" role="listitem" tabindex="0">
+      ${avatar(p)}
+      <div class="meta"><div class="nm">${esc(p.name)}</div>
+      <div class="sub">${p.running ? '<span class="live">Running</span>' : plural(p.modCount, "mod")}<span>Port ${p.port}</span></div></div>
+    </div>`).join("") || '<div class="hint" style="padding:10px 12px">No profiles yet.</div>';
+  list.querySelectorAll(".pitem").forEach(el => {
+    el.onclick = () => select(el.dataset.id);
+    el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(el.dataset.id); } };
+  });
+}
+
+function select(id) {
+  selected = id; store.set("bmm.selected", id);
+  tab = "mods"; modFilter = "";
+  renderSide(); renderMain();
+}
+
+function selectServer(id) {
+  selectedS = id; store.set("bmm.selectedS", id);
+  stab = "connect";
+  renderSide(); renderMain();
+}
+
+function railChrome() {
+  document.querySelectorAll(".mode").forEach(b => b.classList.toggle("active", b.dataset.m === mode));
+  $("#railTitle").textContent = mode === "servers" ? "Servers" : "Profiles";
+  $("#btnNew").innerHTML = ico("plus") + (mode === "servers" ? "New server" : "New profile");
+}
+function setMode(m) {
+  if (m === mode) return;
+  clearInterval(logTimer);
+  mode = m; store.set("bmm.mode", m);
+  railChrome(); renderSide(); renderMain();
+}
+
+function renderHeadStatus() {
+  if (mode === "servers") return renderServerHeadStatus();
+  const p = cur(); if (!p) return;
+  const st = $("#runstate"), btn = $("#playbtn");
+  if (st) { st.className = "state " + (p.running ? "run" : ""); st.innerHTML = '<i class="dotl"></i>' + (p.running ? "Running" : "Stopped"); }
+  if (btn) {
+    btn.className = (p.running ? "danger" : "primary") + " play";
+    btn.innerHTML = p.running ? ico("stop", "fill") + "Stop" : ico("play", "fill") + "Play";
+  }
+  const av = $(".head .av");
+  if (av) { av.classList.toggle("run", p.running); if (p.running && !av.querySelector(".pip")) av.insertAdjacentHTML("beforeend", '<span class="pip"></span>'); if (!p.running) av.querySelector(".pip")?.remove(); }
+}
+
+async function renderMain() {
+  clearInterval(logTimer);
+  if (mode === "servers") return renderServerMain();
+  const m = $("#main"), p = cur();
+  if (!p) {
+    m.innerHTML = `<div class="empty hero">
+      <svg class="big" viewBox="0 0 256 256" aria-hidden="true">%%HERO%%</svg>
+      <h2>Welcome to BeamMP Manager</h2>
+      <p>A profile is a separate BeamNG setup with its own mods, settings and BeamMP login. Make one per server, or per friend on this PC, and run several at once.</p>
+      <button class="primary" id="emptyNew">${ico("plus")}Create your first profile</button></div>`;
+    $("#emptyNew").onclick = () => newProfileModal();
+    return;
+  }
+  const warn = state.launcherFound ? "" :
+    `<div class="banner">${ico("alert")}<div><b>BeamMP-Launcher wasn't found.</b> Put BeamMP Manager in the same folder as BeamMP-Launcher, or set its location in Settings.</div></div>`;
+  m.innerHTML = `<div class="wrap">${warn}
+    <div class="head">${avatar(p, true)}
+      <div><h1>${esc(p.name)}</h1>
+        <div class="facts"><span class="state" id="runstate"></span>
+          <span>${ico("port")}Port ${p.port}</span>
+          <span>${ico("box")}${plural(p.modCount, "mod")} on${p.disabledCount ? ", " + p.disabledCount + " off" : ""}</span></div></div>
+      <div class="actions"><button id="playbtn"></button>
+        <button class="ghost icon" id="btnFolder" title="Open this profile's game folder" aria-label="Open folder">${ico("folder")}</button></div>
+    </div>
+    <div class="seg" role="tablist">${[["mods", "box", "Mods"], ["settings", "sliders", "Settings"], ["log", "term", "Log"]].map(([t, i, l]) =>
+      `<button class="tab ${t === tab ? "active" : ""}" role="tab" data-t="${t}">${ico(i)}${l}</button>`).join("")}</div>
+    <div id="tabbody"></div></div>`;
+  renderHeadStatus();
+  $("#playbtn").onclick = guard(async () => {
+    const q = cur();
+    if (q.running) { await api("POST", `/api/profile/${q.id}/stop`); toast("Stopped " + q.name); }
+    else { await api("POST", `/api/profile/${q.id}/launch`); toast("Starting " + q.name + "…"); }
+    await refresh(false);
+  });
+  $("#btnFolder").onclick = guard(() => api("POST", `/api/profile/${p.id}/open`, {what: "user"}));
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.t; renderMain(); });
+  if (tab === "mods") await renderMods();
+  else if (tab === "settings") renderSettings();
+  else renderLog(`/api/profile/${selected}/log`, "Nothing here yet. Press Play and the launcher's output shows up here.");
+}
+
+/* ------------ mods tab ------------ */
+async function loadMods() { mods = (await api("GET", `/api/profile/${selected}/mods`)).mods; }
+
+async function renderMods() {
+  await loadMods();
+  const p = cur();
+  $("#tabbody").innerHTML = `
+    ${p.running ? `<div class="banner">${ico("alert")}<div>This profile is running. Stop it to add, remove or switch mods.</div></div>` : ""}
+    <div class="dz" id="drop">${ico("upload")}<span>Drop <b>.zip</b> mods here to add them to <b>${esc(p.name)}</b></span>
+      <button class="small" id="pick" ${p.running ? "disabled" : ""}>Choose files</button>
+      <input type="file" id="file" accept=".zip" multiple hidden></div>
+    <div class="toolbar">
+      <div class="search">${ico("search")}<input type="text" id="filter" placeholder="Search mods" value="${esc(modFilter)}" aria-label="Search mods"></div>
+      <span class="sp"></span>
+      <button class="ghost small" id="disAll">Disable all</button>
+      <button class="ghost small" id="enAll">Enable all</button>
+    </div>
+    <div class="card" id="modlist" style="overflow:hidden"></div>
+    <div class="row" style="margin-top:14px;flex-wrap:wrap">
+      <button class="ghost small" id="impPath">${ico("import")}Import from path</button>
+      ${state.defaultBeamNGFound ? `<button class="ghost small" id="impGame">${ico("copy")}Copy mods from my BeamNG</button>` : ""}
+      <button class="ghost small" id="openMods">${ico("folder")}Open mods folder</button>
+    </div>
+    <div class="hint">Mods you switch off are stored outside the game's mods folder, so BeamNG never loads them. Mods that a server needs are downloaded by BeamMP when you join.</div>`;
+  drawModList();
+  $("#filter").oninput = e => { modFilter = e.target.value; drawModList(); };
+  $("#pick").onclick = () => $("#file").click();
+  $("#file").onchange = guard(e => uploadFiles(e.target.files));
+  const drop = $("#drop");
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, () => drop.classList.add("over")));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove("over")));
+  $("#openMods").onclick = guard(() => api("POST", `/api/profile/${p.id}/open`, {what: "mods"}));
+  const setAll = enabled => guard(async () => {
+    const n = mods.filter(m => m.enabled !== enabled).length;
+    if (!n) return;
+    if (!enabled && !confirm(`Disable all ${n} enabled mods in "${p.name}"? You can switch them back on with Enable all.`)) return;
+    const r = await api("POST", `/api/profile/${selected}/mods/toggle-all`, {enabled});
+    toast(`${enabled ? "Enabled" : "Disabled"} ${plural(r.moved, "mod")}` + (r.failed ? ` (${r.failed} failed)` : ""), !!r.failed);
+    await refresh(true);
+  });
+  $("#disAll").onclick = setAll(false);
+  $("#enAll").onclick = setAll(true);
+  $("#impPath").onclick = importPathModal;
+  if ($("#impGame")) $("#impGame").onclick = guard(async () => {
+    const r = await api("POST", `/api/profile/${p.id}/mods/import`, {fromGame: "1"});
+    toast(`Copied ${r.copied} of ${plural(r.found, "mod")}`); await refresh(true);
+  });
+}
+
+function drawModList() {
+  const q = modFilter.toLowerCase(), run = cur().running;
+  const list = mods.filter(m => m.name.toLowerCase().includes(q));
+  if ($("#disAll")) $("#disAll").disabled = run || !mods.some(m => m.enabled);
+  if ($("#enAll")) $("#enAll").disabled = run || !mods.some(m => !m.enabled);
+  $("#modlist").innerHTML = list.map(m => {
+    const base = m.name.replace(/\.zip$/i, "");
+    return `<div class="mod ${m.enabled ? "on" : "off"}">
+      <div class="ic">${ico("box")}</div>
+      <div class="nm">${esc(base)}<i>.zip</i></div>
+      <div class="sz">${fmtSize(m.size)}</div>
+      <label class="switch" title="${m.enabled ? "Switch off" : "Switch on"}"><input type="checkbox" ${m.enabled ? "checked" : ""} ${run ? "disabled" : ""} data-n="${esc(m.name)}" aria-label="Enable ${esc(base)}"><span></span></label>
+      <button class="danger small icon rm" data-del="${esc(m.name)}" ${run ? "disabled" : ""} title="Remove" aria-label="Remove ${esc(base)}">${ico("trash")}</button>
+    </div>`;
+  }).join("") ||
+    `<div class="empty"><div>${mods.length ? "No mods match your search." : "No mods in this profile yet. Drop a .zip above to add your first one."}</div></div>`;
+  document.querySelectorAll("#modlist input[type=checkbox]").forEach(cb => cb.onchange = guard(async () => {
+    await api("POST", `/api/profile/${selected}/mods/toggle`, {name: cb.dataset.n, enabled: cb.checked});
+    await loadMods(); drawModList(); await refresh(false);
+  }));
+  document.querySelectorAll("#modlist [data-del]").forEach(b => b.onclick = guard(async () => {
+    if (!confirm(`Remove ${b.dataset.del} from this profile?`)) return;
+    await api("DELETE", `/api/profile/${selected}/mods?name=${encodeURIComponent(b.dataset.del)}`);
+    await loadMods(); drawModList(); await refresh(false);
+  }));
+}
+
+async function uploadFiles(files) {
+  let ok = 0;
+  for (const f of files) {
+    if (!f.name.toLowerCase().endsWith(".zip")) { toast(f.name + " isn't a .zip file", true); continue; }
+    const base = mode === "servers" ? `/api/server/${selectedS}` : `/api/profile/${selected}`;
+    try { await api("POST", `${base}/mods/upload?name=${encodeURIComponent(f.name)}`, undefined, f); ok++; }
+    catch (e) { toast(f.name + ": " + e.message, true); }
+  }
+  if (ok) toast(`Added ${plural(ok, "mod")}`);
+  await refresh(true);
+}
+
+/* dropping a file anywhere in the window adds it to the open profile */
+let dragDepth = 0;
+const veil = $("#dropveil");
+function dropAllowed() { if (mode === "servers") { const s = curS(); return s && stab === "mods" && !s.running; } const p = cur(); return p && tab === "mods" && !p.running; }
+const dropTarget = () => mode === "servers" ? curS() : cur();
+window.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; if (e.dataTransfer && [...e.dataTransfer.types].includes("Files") && dropAllowed()) { veil.querySelector("small").textContent = "into " + dropTarget().name; veil.classList.add("show"); } });
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("dragleave", e => { e.preventDefault(); if (--dragDepth <= 0) { dragDepth = 0; veil.classList.remove("show"); } });
+window.addEventListener("drop", e => {
+  e.preventDefault(); dragDepth = 0; veil.classList.remove("show");
+  const files = e.dataTransfer ? e.dataTransfer.files : [];
+  if (!files.length) return;
+  if (!dropTarget()) return toast("Create a " + (mode === "servers" ? "server" : "profile") + " first, then drop your mods.", true);
+  if (!dropAllowed()) return toast(dropTarget().running ? "Stop it before adding mods." : "Open the Mods tab to add mods.", true);
+  guard(() => uploadFiles(files))();
+});
+
+/* ------------ settings tab ------------ */
+function renderSettings() {
+  const p = cur();
+  $("#tabbody").innerHTML = `<div class="card pad">
+    <div class="g2"><div><label class="f" style="margin-top:0" for="sName">Profile name</label><input id="sName" value="${esc(p.name)}" maxlength="60"></div>
+    <div><label class="f" style="margin-top:0" for="sPort">Launcher port</label><input id="sPort" type="number" min="1024" max="65000" value="${p.port}"></div></div>
+    <div class="hint">Every running profile needs its own port. The launcher also uses the next port up, so keep them at least 2 apart.</div>
+    <label class="f" for="sArgs">Extra game arguments</label><input id="sArgs" value="${esc(p.gameArgs)}" placeholder="-windowed">
+    <div class="hint">Passed to BeamNG when this profile starts. The profile's user folder is set for you.</div>
+    <label class="check"><span class="switch"><input type="checkbox" id="sOffline" ${p.offline ? "checked" : ""}><span></span></span>Offline mode: skip BeamMP login (private direct-connect servers only)</label>
+    <label class="f" for="sOffName">Offline display name</label><input id="sOffName" maxlength="32" value="${esc(p.offlineName || "")}" placeholder="${esc(p.name)}">
+    <div class="hint">Works when BeamMP's login servers are down. The launcher won't contact BeamMP at all, so the mod must already be installed. Public servers will still require a real BeamMP login.</div>
+    <label class="f" for="sNotes">Notes</label><textarea id="sNotes" placeholder="Server address, what this setup is for…">${esc(p.notes)}</textarea>
+    <div class="row" style="margin-top:20px"><button class="primary" id="sSave">Save changes</button></div>
+    <div class="divider"></div>
+    <div class="sechead">Manage this profile</div>
+    <div class="row" style="margin-top:12px;flex-wrap:wrap">
+      <button class="ghost" id="sClone">${ico("copy")}Duplicate</button>
+      <button class="ghost" id="sInst">${ico("folder")}Open launcher folder</button>
+      <span class="sp"></span>
+      <button class="danger" id="sDel">${ico("trash")}Delete profile</button></div>
+    </div>
+    <div class="hint" style="margin-top:14px">Each profile keeps its own BeamMP login. The first time you press Play on a new profile, sign in in the launcher window that opens.</div>`;
+  $("#sSave").onclick = guard(async () => {
+    await api("PUT", `/api/profile/${p.id}`, {name: $("#sName").value.trim(), port: parseInt($("#sPort").value, 10),
+      gameArgs: $("#sArgs").value, notes: $("#sNotes").value,
+      offline: $("#sOffline").checked, offlineName: $("#sOffName").value.trim()});
+    toast("Saved changes"); await refresh(true);
+  });
+  $("#sClone").onclick = () => newProfileModal(p);
+  $("#sInst").onclick = guard(() => api("POST", `/api/profile/${p.id}/open`, {what: "instance"}));
+  $("#sDel").onclick = guard(async () => {
+    if (!confirm(`Delete "${p.name}" and all of its mods and settings? This can't be undone.`)) return;
+    await api("DELETE", `/api/profile/${p.id}`); toast("Deleted " + p.name); selected = null; await refresh(true);
+  });
+}
+
+/* ------------ log tab ------------ */
+function renderLog(path, emptyMsg) {
+  $("#tabbody").innerHTML = `<pre id="log">Loading…</pre>`;
+  const load = async () => {
+    try {
+      const r = await api("GET", path);
+      const el = $("#log"); if (!el) return clearInterval(logTimer);
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
+      el.textContent = r.log || emptyMsg;
+      if (atBottom) el.scrollTop = el.scrollHeight;
+    } catch (e) {}
+  };
+  load(); logTimer = setInterval(load, 2000);
+}
+
+/* ------------ servers ------------ */
+const MAPS = [["gridmap_v2", "Grid Map V2"], ["east_coast_usa", "East Coast USA"], ["west_coast_usa", "West Coast USA"],
+  ["johnson_valley", "Johnson Valley"], ["jungle_rock_island", "Jungle Rock Island"], ["automation_test_track", "Automation Test Track"],
+  ["italy", "Italy"], ["utah", "Utah"], ["small_island", "Small Island"], ["derby", "Derby"], ["industrial", "Industrial"],
+  ["driver_training", "Driver Training Area"], ["hirochi_raceway", "Hirochi Raceway"], ["cliff", "Cliff"], ["smallgrid", "Small Grid"]];
+const mapPath = n => `/levels/${n}/info.json`;
+const openLink = url => guard(() => api("POST", "/api/open-url", {url}))();
+
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); }
+  catch (e) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e2) {} ta.remove(); }
+  toast("Copied " + t);
+}
+
+function renderServerHeadStatus() {
+  const s = curS(); if (!s) return;
+  const st = $("#runstate"), btn = $("#playbtn"), mc = $("#smc");
+  if (mc) mc.textContent = plural(s.modCount, "mod");
+  if (st) { st.className = "state " + (s.running ? "run" : ""); st.innerHTML = '<i class="dotl"></i>' + (s.running ? "Online" : "Offline"); }
+  if (btn) {
+    const dl = sb().state === "downloading";
+    btn.className = (s.running ? "danger" : "primary") + " play";
+    btn.disabled = dl && !s.running;
+    btn.innerHTML = s.running ? ico("stop", "fill") + "Stop" : dl ? "Downloading…" : ico("play", "fill") + "Start";
+  }
+  const av = $(".head .av");
+  if (av) { av.classList.toggle("run", s.running); if (s.running && !av.querySelector(".pip")) av.insertAdjacentHTML("beforeend", '<span class="pip"></span>'); if (!s.running) av.querySelector(".pip")?.remove(); }
+}
+
+async function renderServerMain() {
+  const m = $("#main"), s = curS();
+  if (!s) {
+    m.innerHTML = `<div class="empty hero">
+      <svg class="big" viewBox="0 0 256 256" aria-hidden="true">%%HERO%%</svg>
+      <h2>Host your own BeamMP server</h2>
+      <p>Pick a name and the manager does the rest: it installs the server software, chooses a free port, copies your mods over and tells you the address to send your friends.</p>
+      <button class="primary" id="emptyNewS">${ico("plus")}Create your first server</button></div>`;
+    $("#emptyNewS").onclick = newServerModal;
+    return;
+  }
+  m.innerHTML = `<div class="wrap">
+    <div class="head">${avatar(s, true)}
+      <div><h1>${esc(s.name)}</h1>
+        <div class="facts"><span class="state" id="runstate"></span>
+          <span>${ico("port")}Port ${s.port}</span>
+          <span>${ico("users")}Up to ${s.maxPlayers} players</span>
+          <span>${ico("box")}<span id="smc">${plural(s.modCount, "mod")}</span></span></div></div>
+      <div class="actions"><button id="playbtn"></button>
+        <button class="ghost icon" id="btnFolder" title="Open this server's folder" aria-label="Open folder">${ico("folder")}</button></div>
+    </div>
+    <div class="seg" role="tablist">${[["connect", "globe", "Connect"], ["mods", "box", "Mods"], ["settings", "sliders", "Settings"], ["log", "term", "Log"]].map(([t, i, l]) =>
+      `<button class="tab ${t === stab ? "active" : ""}" role="tab" data-t="${t}">${ico(i)}${l}</button>`).join("")}</div>
+    <div id="tabbody"></div></div>`;
+  renderServerHeadStatus();
+  $("#playbtn").onclick = guard(() => curS().running ? stopServer() : startFlow());   // re-read: state is replaced on every poll
+  $("#btnFolder").onclick = guard(() => api("POST", `/api/server/${s.id}/open`, {what: "server"}));
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => { stab = b.dataset.t; renderServerMain(); });
+  lastSetupKey = setupKey();
+  if (stab === "connect") await renderConnect();
+  else if (stab === "mods") await renderServerMods();
+  else if (stab === "settings") renderServerSettings();
+  else renderLog(`/api/server/${s.id}/log`, "Nothing here yet. Start the server and its output shows up here.");
+}
+
+const stopStamp = {};   // server id -> when the user last pressed Stop
+async function stopServer() {
+  const s = curS();
+  stopStamp[s.id] = Date.now();
+  await api("POST", `/api/server/${s.id}/stop`);
+  toast("Stopped " + s.name);
+  await refresh(false);
+}
+
+// One button does everything: key, download, mod import, config, port check, launch.
+async function startFlow() {
+  const s = curS();
+  if (!s.hasAuthKey && !s.private) return keyModal(true); // private servers do not need a Keymaster key
+  if (!sb().found) {
+    if (!sb().canDownload) return toast("BeamMP-Server was not found. Set its location in Settings (gear in the sidebar).", true);
+    pendingStart = s.id;
+    if (sb().state !== "downloading") await api("POST", "/api/server-binary/download");
+    toast("Downloading BeamMP-Server. Your server starts as soon as it's ready.");
+    return refresh(false);
+  }
+  await doStart(s);
+}
+
+async function doStart(s) {
+  const t0 = Date.now();
+  const r = await api("POST", `/api/server/${s.id}/start`);
+  toast("Starting " + s.name + "…" + (r.sync ? ` (${plural(r.sync.copied + r.sync.unchanged, "mod")} imported)` : ""));
+  await refresh(false);
+  setTimeout(async () => {
+    try { await refresh(false); } catch (e) { return; }
+    const t = state.servers.find(x => x.id === s.id);
+    if ((stopStamp[s.id] || 0) > t0) return;   // the user stopped it on purpose
+    if (t && !t.running) toast(`${t.name} stopped right after starting. Open the Log tab to see why.`, true);
+  }, 3500);
+}
+
+// Runs on every poll: finishes the "download, then start" flow and refreshes the checklist.
+function setupKey() { const s = curS() || {}; return [sb().state, sb().found, s.id, s.modCount, s.hasAuthKey, s.running].join("|"); }
+function watchServerSetup() {
+  if (mode !== "servers") return;
+  const b = sb(), key = setupKey();
+  if (pendingStart && b.state === "done" && b.found) {
+    const s = state.servers.find(x => x.id === pendingStart); pendingStart = null;
+    if (s && !s.running) guard(() => doStart(s))();
+  } else if (pendingStart && b.state === "error") {
+    pendingStart = null; toast(b.message || "The download failed", true);
+  }
+  if (key !== lastSetupKey) {
+    lastSetupKey = key;
+    if (curS() && !$("#modalbg").classList.contains("show")) {
+      if (stab === "connect") renderConnect();
+      else if (stab === "mods") renderServerMods();   // buttons depend on running / not running
+    }
+  }
+}
+
+/* ---- Connect tab: setup checklist + the address to share ---- */
+const chk = (ok, title, detail, action, bad) =>
+  `<div class="chk ${ok ? "ok" : ""} ${bad ? "bad" : ""}"><span class="mark">${ok ? ico("check") : ""}</span>
+    <div class="t"><b>${title}</b><span>${detail}</span></div><div class="act">${action || ""}</div></div>`;
+
+async function renderConnect() {
+  const s = curS(); if (!s) return;
+  let net = {addresses: [], radminIp: "", radminInstalled: false};
+  try { net = await api("GET", "/api/network"); } catch (e) {}
+  if (!$("#tabbody") || stab !== "connect" || curS()?.id !== s.id) return;
+  const b = sb(), dl = b.state === "downloading", win = state.platform === "windows";
+  const src = state.profiles.find(p => p.id === s.syncProfile);
+  const rows = [];
+
+  rows.push(chk(b.found, "Server software (BeamMP-Server)",
+    b.found ? "Installed" : dl ? "Downloading, this only takes a moment…" : b.state === "error" ? esc(b.message)
+      : b.canDownload ? "Not installed yet. One click and the manager downloads it." : "Not found. Set its location in Settings (gear in the sidebar).",
+    b.found ? (b.canDownload ? `<button class="ghost small" id="cUpdate" ${dl || s.running ? "disabled" : ""}>${ico("refresh")}Update</button>` : "")
+      : b.canDownload ? `<button class="primary small" id="cDownload" ${dl ? "disabled" : ""}>${ico("import")}${dl ? "Downloading…" : "Download"}</button>`
+        : `<button class="ghost small" id="cSettings">Open settings</button>`,
+    b.state === "error"));
+
+  rows.push(chk(s.hasAuthKey || s.private, "BeamMP server key",
+    s.hasAuthKey ? "Saved" : s.private ? "Not needed for a private server. Only required to list it publicly." : "BeamMP needs a key to let your server online. It's free: sign in at keymaster.beammp.com and create one.",
+    s.hasAuthKey ? `<button class="ghost small" id="cKeyEnter">Change</button>`
+      : `<button class="ghost small" id="cKeyGet">${ico("globe")}Get a key</button><button class="primary small" id="cKeyEnter">${ico("key")}Enter key</button>`));
+
+  rows.push(chk(!!src || s.modCount > 0, "Mods",
+    src ? `Imported from <b>${esc(src.name)}</b>${s.autoSync ? " every time the server starts" : ""} (${plural(s.modCount, "mod")} on the server)`
+      : s.modCount ? plural(s.modCount, "mod") + " on the server" : "No mods yet. Optional: copy the ones from one of your profiles.",
+    `<button class="ghost small" id="cMods">Manage</button>`));
+
+  if (win) rows.push(chk(false, "Windows Firewall",
+    "Windows can quietly block friends from joining, especially over Radmin VPN. This allows port " + s.port + " (TCP and UDP). Windows asks for permission once.",
+    `<button class="ghost small" id="cFw">${ico("shield")}Allow it</button>`));
+
+  const addr = ip => `${ip}:${s.port}`;
+  const others = (net.addresses || []).filter(a => !a.radmin);
+  const radminBlock = net.radminIp
+    ? `<div class="addr best"><div style="flex:1;min-width:0"><small>Radmin VPN address: share this one</small><code>${esc(addr(net.radminIp))}</code></div>
+        <button class="primary small" data-copy="${esc(addr(net.radminIp))}">${ico("copy")}Copy</button></div>
+       <div class="hint">Everyone on your Radmin network can join. In BeamMP they choose <b>Direct Connect</b> and paste this address.</div>`
+    : `<div class="sechead" style="margin-top:6px">Playing with friends over the internet? Use Radmin VPN</div>
+       <div class="hint" style="margin-top:2px">${net.radminInstalled
+          ? "Radmin VPN is installed, but you aren't in a network yet. Open it, create or join a network, then press Refresh."
+          : "Radmin VPN is a free app that puts everyone on one virtual network, so nobody has to open ports on their router. We recommend it."}</div>
+       <ol class="steps">
+         <li>Everyone installs Radmin VPN.</li>
+         <li>One person picks <b>Network → Create network</b> and shares the name and password. Everyone else picks <b>Join network</b>.</li>
+         <li>Press Refresh here. Your Radmin address (it starts with 26.) shows up with a Copy button.</li>
+         <li>Friends open BeamMP, choose <b>Direct Connect</b> and paste it.</li>
+       </ol>
+       <div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="primary small" id="cRadmin">${ico("import")}Get Radmin VPN</button>
+         <button class="ghost small" id="cRefresh">${ico("refresh")}Refresh</button></div>`;
+
+  $("#tabbody").innerHTML = `
+    <div class="card" style="overflow:hidden">${rows.join("")}</div>
+    <div class="card pad" style="margin-top:16px">
+      ${radminBlock}
+      ${net.radminIp ? `<div class="row" style="margin-top:10px"><button class="ghost small" id="cRefresh">${ico("refresh")}Refresh</button></div>` : ""}
+      <div class="divider"></div>
+      <div class="sechead">Other ways to connect</div>
+      ${others.map(a => `<div class="addr"><div style="flex:1;min-width:0"><small>Same Wi-Fi or home network</small><code>${esc(addr(a.ip))}</code></div>
+        <button class="ghost small" data-copy="${esc(addr(a.ip))}">${ico("copy")}Copy</button></div>`).join("")}
+      <div class="addr"><div style="flex:1;min-width:0"><small>This PC (to test it yourself)</small><code>${esc(addr("127.0.0.1"))}</code></div>
+        <button class="ghost small" data-copy="${esc(addr("127.0.0.1"))}">${ico("copy")}Copy</button></div>
+      <div class="hint">${s.private ? "This server is private: it isn't in the public server list, so friends join with Direct Connect." : "This server is public: it also shows up in BeamMP's server list."}
+        Over the plain internet (no VPN) you would have to forward port ${s.port} on your router.</div>
+    </div>`;
+
+  const on = (id, fn) => { const el = $(id); if (el) el.onclick = guard(fn); };
+  on("#cDownload", async () => { await api("POST", "/api/server-binary/download"); toast("Downloading BeamMP-Server…"); await refresh(false); renderConnect(); });
+  on("#cUpdate", async () => { await api("POST", "/api/server-binary/download"); toast("Updating BeamMP-Server…"); await refresh(false); renderConnect(); });
+  on("#cSettings", async () => settingsModal());
+  on("#cKeyGet", async () => openLink("https://keymaster.beammp.com/"));
+  on("#cKeyEnter", async () => keyModal(false));
+  on("#cMods", async () => { stab = "mods"; renderServerMain(); });
+  on("#cFw", async () => { await api("POST", `/api/server/${s.id}/firewall`); toast("Approve the Windows permission prompt to finish."); });
+  on("#cRadmin", async () => openLink("https://www.radmin-vpn.com/"));
+  on("#cRefresh", async () => { await renderConnect(); toast("Checked your network again"); });
+  document.querySelectorAll("[data-copy]").forEach(bn => bn.onclick = () => copyText(bn.dataset.copy));
+}
+
+function keyModal(thenStart) {
+  const s = curS();
+  showModal(`<h3>BeamMP server key</h3>
+    <div class="hint" style="margin-top:0">BeamMP gives every server owner a free key. Sign in at keymaster.beammp.com, create a key and paste it here. The key stays on this PC.</div>
+    <div class="row" style="margin-top:12px"><button class="ghost small" id="kGet">${ico("globe")}Open keymaster.beammp.com</button></div>
+    <label class="f" for="kKey">Key</label><input id="kKey" type="password" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+    <div class="btns"><button class="ghost" id="kCancel">Cancel</button><button class="primary" id="kOk">${thenStart ? "Save and start" : "Save"}</button></div>`);
+  $("#kKey").focus();
+  $("#kGet").onclick = () => openLink("https://keymaster.beammp.com/");
+  $("#kCancel").onclick = closeModal;
+  const go = guard(async () => {
+    const key = $("#kKey").value.trim();
+    if (!key) throw new Error("Paste your key first");
+    await api("PUT", `/api/server/${s.id}`, {authKey: key});
+    lastFocus = null; closeModal(); toast("Key saved");
+    await refresh(true);
+    if (thenStart) await startFlow();
+  });
+  $("#kOk").onclick = go;
+  $("#kKey").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+/* ---- Mods tab: import from a profile ---- */
+async function renderServerMods() {
+  const s = curS(); if (!s) return;
+  smods = (await api("GET", `/api/server/${s.id}/mods`)).mods;
+  if (!$("#tabbody") || stab !== "mods") return;
+  const opts = state.profiles.map(p => `<option value="${esc(p.id)}" ${p.id === s.syncProfile ? "selected" : ""}>${esc(p.name)} (${plural(p.modCount, "mod")} on)</option>`).join("");
+  $("#tabbody").innerHTML = `
+    ${s.running ? `<div class="banner">${ico("alert")}<div>This server is running. Stop it to import, add or remove mods.</div></div>` : ""}
+    <div class="card pad" style="margin-bottom:16px">
+      <div class="sechead">Import mods from a profile</div>
+      <div class="hint" style="margin-top:2px">Copies the profile's switched-on mods into this server, so everyone who joins downloads exactly what you play with.</div>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap">
+        <select id="mProfile" aria-label="Profile to import from"><option value="">Choose a profile…</option>${opts}</select>
+        <button class="primary small" id="mAll" ${s.running ? "disabled" : ""}>${ico("import")}Import all</button>
+        <button class="ghost small" id="mPick" ${s.running ? "disabled" : ""}>Choose mods…</button></div>
+      <label class="check"><span class="switch"><input type="checkbox" id="mAuto" ${s.autoSync ? "checked" : ""}><span></span></span>Import again automatically every time the server starts</label>
+      <div class="hint">Mods you add by hand to this server are never removed. Only mods that came from the profile are kept in step with it.</div>
+    </div>
+    <div class="dz" id="drop">${ico("upload")}<span>Drop <b>.zip</b> mods here to add them straight to <b>${esc(s.name)}</b></span>
+      <button class="small" id="pick" ${s.running ? "disabled" : ""}>Choose files</button>
+      <input type="file" id="file" accept=".zip" multiple hidden></div>
+    <div class="card" id="smodlist" style="overflow:hidden"></div>
+    <div class="row" style="margin-top:14px"><button class="ghost small" id="openSMods">${ico("folder")}Open mods folder</button></div>
+    <div class="hint">Using a map mod? Add its .zip here, then set the map in Settings to <b>Custom</b> and enter /levels/&lt;map name&gt;/info.json.</div>`;
+  $("#smodlist").innerHTML = smods.map(m => {
+    const base = m.name.replace(/\.zip$/i, "");
+    return `<div class="mod on"><div class="ic">${ico("box")}</div>
+      <div class="nm">${esc(base)}<i>.zip</i></div>${m.synced ? '<span class="badge on">from profile</span>' : '<span class="badge">added by hand</span>'}
+      <div class="sz">${fmtSize(m.size)}</div>
+      <button class="danger small icon rm" data-del="${esc(m.name)}" ${s.running ? "disabled" : ""} title="Remove" aria-label="Remove ${esc(base)}">${ico("trash")}</button></div>`;
+  }).join("") || `<div class="empty"><div>No mods on this server yet. Import some from a profile above, or drop .zip files here.</div></div>`;
+
+  $("#mProfile").onchange = guard(async () => { const v = $("#mProfile").value; if (v) await api("PUT", `/api/server/${s.id}`, {syncProfile: v}); await refresh(false); });
+  $("#mAuto").onchange = guard(async () => { await api("PUT", `/api/server/${s.id}`, {autoSync: $("#mAuto").checked}); await refresh(false); });
+  const doSync = names => guard(async () => {
+    const pid = $("#mProfile").value;
+    if (!pid) throw new Error("Choose a profile first");
+    const r = await api("POST", `/api/server/${s.id}/mods/sync`, names ? {profileId: pid, names} : {profileId: pid});
+    toast(`Imported ${plural(r.copied + r.unchanged, "mod")}` + (r.removed ? `, removed ${r.removed} that left the profile` : "") + (r.failed ? ` (${r.failed} failed)` : ""), !!r.failed);
+    await refresh(true);
+  });
+  $("#mAll").onclick = doSync(null);
+  $("#mPick").onclick = guard(async () => {
+    const pid = $("#mProfile").value;
+    if (!pid) throw new Error("Choose a profile first");
+    const list = (await api("GET", `/api/profile/${pid}/mods`)).mods.filter(m => m.enabled);
+    if (!list.length) throw new Error("That profile has no switched-on mods");
+    showModal(`<h3>Choose mods to import</h3><div class="hint" style="margin-top:0">Only switched-on mods of that profile are listed.</div>
+      <div class="row" style="margin-top:12px"><button class="ghost small" id="pAll">Select all</button><button class="ghost small" id="pNone">Select none</button></div>
+      <div class="pick" id="pickList">${list.map(m => `<label><input type="checkbox" checked data-n="${esc(m.name)}">${esc(m.name.replace(/\.zip$/i, ""))}<span class="sp"></span><span class="hint" style="margin:0">${fmtSize(m.size)}</span></label>`).join("")}</div>
+      <div class="btns"><button class="ghost" id="pCancel">Cancel</button><button class="primary" id="pOk">Import selected</button></div>`);
+    const boxes = () => [...document.querySelectorAll("#pickList input")];
+    $("#pAll").onclick = () => boxes().forEach(c => c.checked = true);
+    $("#pNone").onclick = () => boxes().forEach(c => c.checked = false);
+    $("#pCancel").onclick = closeModal;
+    $("#pOk").onclick = guard(async () => {
+      const names = boxes().filter(c => c.checked).map(c => c.dataset.n);
+      lastFocus = null; closeModal();
+      await doSync(names)();
+    });
+  });
+  $("#pick").onclick = () => $("#file").click();
+  $("#file").onchange = guard(e => uploadFiles(e.target.files));
+  const drop = $("#drop");
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, () => drop.classList.add("over")));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove("over")));
+  $("#openSMods").onclick = guard(() => api("POST", `/api/server/${s.id}/open`, {what: "mods"}));
+  document.querySelectorAll("#smodlist [data-del]").forEach(bn => bn.onclick = guard(async () => {
+    if (!confirm(`Remove ${bn.dataset.del} from this server?`)) return;
+    await api("DELETE", `/api/server/${s.id}/mods?name=${encodeURIComponent(bn.dataset.del)}`);
+    await refresh(true);
+  }));
+}
+
+/* ---- Settings tab ---- */
+function renderServerSettings() {
+  const s = curS();
+  const known = MAPS.some(([n]) => mapPath(n) === s.map);
+  $("#tabbody").innerHTML = `<div class="card pad">
+    ${s.running ? `<div class="banner">${ico("alert")}<div>This server is running. Stop it to change its settings; they apply the next time it starts.</div></div>` : ""}
+    <div class="g2"><div><label class="f" style="margin-top:0" for="vsName">Server name</label><input id="vsName" value="${esc(s.name)}" maxlength="100"></div>
+    <div><label class="f" style="margin-top:0" for="vsPort">Port</label><input id="vsPort" type="number" min="1024" max="65535" value="${s.port}"></div></div>
+    <div class="hint">Players connect to this port (TCP and UDP). The manager picked a free one; change it if you like.</div>
+    <div class="g3">
+      <div><label class="f" for="vsPlayers">Max players</label><input id="vsPlayers" type="number" min="1" max="100" value="${s.maxPlayers}"></div>
+      <div><label class="f" for="vsCars">Cars per player</label><input id="vsCars" type="number" min="1" max="20" value="${s.maxCars}"></div></div>
+    <label class="f" for="vsMap">Map</label>
+    <select id="vsMap" class="full">${MAPS.map(([n, l]) => `<option value="${mapPath(n)}" ${mapPath(n) === s.map ? "selected" : ""}>${l}</option>`).join("")}
+      <option value="__custom" ${known ? "" : "selected"}>Custom (modded map)…</option></select>
+    <input id="vsMapCustom" style="margin-top:8px;${known ? "display:none" : ""}" value="${known ? "" : esc(s.map)}" placeholder="/levels/your_map/info.json">
+    <label class="f" for="vsDesc">Description</label><textarea id="vsDesc" maxlength="300" placeholder="Shown in the server list">${esc(s.description)}</textarea>
+    <label class="check"><span class="switch"><input type="checkbox" id="vsPrivate" ${s.private ? "checked" : ""}><span></span></span>Private: don't list this server publicly (friends use Direct Connect)</label>
+    <label class="check"><span class="switch"><input type="checkbox" id="vsDebug" ${s.debug ? "checked" : ""}><span></span></span>Debug logging</label>
+    <label class="f" for="vsKey">BeamMP server key</label><input id="vsKey" type="password" autocomplete="off" placeholder="${s.hasAuthKey ? "Saved. Type a new key only to replace it" : "Paste your key from keymaster.beammp.com"}">
+    <div class="row" style="margin-top:20px"><button class="primary" id="vsSave" ${s.running ? "disabled" : ""}>Save changes</button></div>
+    <div class="divider"></div>
+    <div class="sechead">Manage this server</div>
+    <div class="row" style="margin-top:12px;flex-wrap:wrap">
+      <button class="ghost" id="vsFolder">${ico("folder")}Open server folder</button>
+      ${state.platform === "windows" ? `<button class="ghost" id="vsFw">${ico("shield")}Allow port in firewall</button>` : ""}
+      <span class="sp"></span>
+      <button class="danger" id="vsDel" ${s.running ? "disabled" : ""}>${ico("trash")}Delete server</button></div>
+    </div>
+    <div class="hint" style="margin-top:14px">The manager rewrites ServerConfig.toml every time the server starts, so change settings here rather than in the file.</div>`;
+  $("#vsMap").onchange = () => { $("#vsMapCustom").style.display = $("#vsMap").value === "__custom" ? "" : "none"; };
+  $("#vsSave").onclick = guard(async () => {
+    const map = $("#vsMap").value === "__custom" ? $("#vsMapCustom").value.trim() : $("#vsMap").value;
+    const body = {name: $("#vsName").value.trim(), port: parseInt($("#vsPort").value, 10), maxPlayers: parseInt($("#vsPlayers").value, 10),
+      maxCars: parseInt($("#vsCars").value, 10), map, description: $("#vsDesc").value, private: $("#vsPrivate").checked, debug: $("#vsDebug").checked};
+    const key = $("#vsKey").value.trim(); if (key) body.authKey = key;
+    await api("PUT", `/api/server/${s.id}`, body);
+    toast("Saved changes"); await refresh(true);
+  });
+  $("#vsFolder").onclick = guard(() => api("POST", `/api/server/${s.id}/open`, {what: "server"}));
+  if ($("#vsFw")) $("#vsFw").onclick = guard(async () => { await api("POST", `/api/server/${s.id}/firewall`); toast("Approve the Windows permission prompt to finish."); });
+  $("#vsDel").onclick = guard(async () => {
+    if (!confirm(`Delete "${s.name}" and its mods and settings? This can't be undone.`)) return;
+    await api("DELETE", `/api/server/${s.id}`); toast("Deleted " + s.name); selectedS = null; await refresh(true);
+  });
+}
+
+/* ---- New server ---- */
+function newServerModal() {
+  const opts = state.profiles.map(p => `<option value="${esc(p.id)}" ${p.id === selected ? "selected" : ""}>${esc(p.name)} (${plural(p.modCount, "mod")})</option>`).join("");
+  showModal(`<h3>New server</h3>
+    <div class="hint" style="margin-top:0">Hosts a BeamMP server on this PC. Everything else (software, port, mods, config) is set up for you.</div>
+    <label class="f" for="vName">Server name</label><input id="vName" maxlength="100" placeholder="Friday night drifting">
+    <label class="f" for="vKey">BeamMP server key</label><input id="vKey" type="password" autocomplete="off" placeholder="Paste it now, or when you press Start">
+    <div class="hint">The only thing the manager can't do for you. It's free at keymaster.beammp.com. <a href="#" id="vGet">Open it</a></div>
+    <label class="f" for="vProf">Import mods from</label>
+    <select id="vProf" class="full"><option value="">No mods for now</option>${opts}</select>
+    <div class="btns"><button class="ghost" id="vCancel">Cancel</button><button class="primary" id="vOk">Create server</button></div>`);
+  $("#vName").focus();
+  $("#vGet").onclick = e => { e.preventDefault(); openLink("https://keymaster.beammp.com/"); };
+  $("#vCancel").onclick = closeModal;
+  const go = guard(async () => {
+    const body = {name: $("#vName").value.trim(), syncProfile: $("#vProf").value};
+    const key = $("#vKey").value.trim(); if (key) body.authKey = key;
+    const s = await api("POST", "/api/server", body);
+    lastFocus = null; closeModal(); toast("Created " + s.name);
+    selectedS = s.id; store.set("bmm.selectedS", s.id); stab = "connect";
+    await refresh(true);
+    if (!sb().found && sb().canDownload && sb().state !== "downloading") {   // fetch the server software right away
+      try { await api("POST", "/api/server-binary/download"); await refresh(true); } catch (e) { toast(e.message, true); }
+    }
+  });
+  $("#vOk").onclick = go;
+  $("#vName").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+/* ------------ modals ------------ */
+let lastFocus = null;
+function showModal(html) { lastFocus = document.activeElement; $("#modal").innerHTML = html; $("#modalbg").classList.add("show"); }
+function closeModal() { $("#modalbg").classList.remove("show"); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+$("#modalbg").onmousedown = e => { if (e.target.id === "modalbg") closeModal(); };
+
+function newProfileModal(src) {
+  const isClone = src && src.id;
+  showModal(`<h3>${isClone ? "Duplicate profile" : "New profile"}</h3>
+    <div class="hint" style="margin-top:0">${isClone ? "Copies the mods and settings from <b>" + esc(src.name) + "</b>." : "A fresh setup with its own mods, settings and BeamMP login."}</div>
+    <label class="f" for="nName">Name</label><input id="nName" maxlength="60" placeholder="${isClone ? esc(src.name) + " copy" : "Drift server, Vanilla, Testing…"}">
+    ${isClone ? `<label class="check"><input type="checkbox" id="nLogin">Also copy the BeamMP login</label>` : ""}
+    <div class="btns"><button class="ghost" id="nCancel">Cancel</button><button class="primary" id="nOk">${isClone ? "Duplicate" : "Create profile"}</button></div>`);
+  $("#nName").focus();
+  $("#nCancel").onclick = closeModal;
+  const go = guard(async () => {
+    const name = $("#nName").value.trim();
+    const body = {name};
+    if (isClone) { body.cloneFrom = src.id; body.copyLogin = $("#nLogin").checked; }
+    const p = await api("POST", "/api/profile", body);
+    lastFocus = null; closeModal(); toast("Created " + p.name);
+    selected = p.id; store.set("bmm.selected", p.id); tab = "mods";
+    await refresh(true);
+  });
+  $("#nOk").onclick = go;
+  $("#nName").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+function importPathModal() {
+  showModal(`<h3>Import mods</h3><div class="hint" style="margin-top:0">Paste the path to a .zip file, or to a folder that contains .zip mods.</div>
+    <label class="f" for="iPath">Path</label><input id="iPath" placeholder="C:\\Users\\you\\Downloads\\mods">
+    <div class="btns"><button class="ghost" id="iCancel">Cancel</button><button class="primary" id="iOk">Import</button></div>`);
+  $("#iPath").focus();
+  $("#iCancel").onclick = closeModal;
+  const go = guard(async () => {
+    const r = await api("POST", `/api/profile/${selected}/mods/import`, {path: $("#iPath").value.trim().replace(/^"|"$/g, "")});
+    lastFocus = null; closeModal(); toast(`Copied ${r.copied} of ${plural(r.found, "mod")}`); await refresh(true);
+  });
+  $("#iOk").onclick = go;
+  $("#iPath").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+function settingsModal() {
+  showModal(`<h3>Settings</h3>
+    <label class="f" for="stLauncher">BeamMP-Launcher location</label><input id="stLauncher" value="${esc(state.launcherPath)}" placeholder="Found automatically next to BeamMP Manager">
+    <div class="hint">${state.launcherFound ? "Using " + esc(state.launcherResolved) : "Not found yet. Paste the full path to BeamMP-Launcher.exe."}</div>
+    <label class="f" for="stServer">BeamMP-Server location (optional)</label><input id="stServer" value="${esc(sb().configuredPath || "")}" placeholder="Downloaded for you when you start your first server">
+    <div class="hint">${sb().found ? "Using " + esc(sb().path) : "Not installed yet. The manager downloads it when you start a server."}</div>
+    <label class="f" for="stData">Where profiles are stored</label><input id="stData" value="${esc(state.dataDir)}" readonly>
+    <div class="hint">Each profile has its own launcher folder, so you can sign in to a different BeamMP account in each one.</div>
+    <div class="btns"><button class="ghost" id="stCancel">Close</button><button class="primary" id="stOk">Save</button></div>`);
+  $("#stCancel").onclick = closeModal;
+  $("#stOk").onclick = guard(async () => {
+    await api("POST", "/api/settings", {launcherPath: $("#stLauncher").value.trim().replace(/^"|"$/g, ""), serverPath: $("#stServer").value.trim().replace(/^"|"$/g, "")});
+    lastFocus = null; closeModal(); toast("Saved settings"); await refresh(true);
+  });
+}
+
+$("#btnNew").onclick = () => mode === "servers" ? newServerModal() : newProfileModal();
+document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.dataset.m));
+railChrome();
+$("#btnSettings").onclick = settingsModal;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+refresh(true).catch(e => toast(e.message, true));
+setInterval(() => { if (!$("#modalbg").classList.contains("show")) refresh(false).catch(() => {}); }, 2500);
+</script>
+</body>
+</html>

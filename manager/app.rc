@@ -1,0 +1,35 @@
+// Windows resources for BeamMP-Manager.exe: app icon (file, taskbar, window), version info, manifest.
+// Numeric constants are used on purpose so this compiles with windres (MinGW) and rc.exe (MSVC) alike.
+
+1 ICON "assets/app.ico"
+
+1 24 "app.manifest"
+
+1 VERSIONINFO
+FILEVERSION 1,2,0,0
+PRODUCTVERSION 1,2,0,0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "BeamMP Manager\0"
+            VALUE "FileDescription", "BeamMP Manager - profiles and multi-instance launcher\0"
+            VALUE "FileVersion", "1.2.0.0\0"
+            VALUE "InternalName", "BeamMP-Manager\0"
+            VALUE "LegalCopyright", "AGPL-3.0-or-later\0"
+            VALUE "OriginalFilename", "BeamMP-Manager.exe\0"
+            VALUE "ProductName", "BeamMP Manager\0"
+            VALUE "ProductVersion", "1.2.0.0\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END

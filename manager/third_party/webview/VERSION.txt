@@ -1,0 +1,1 @@
+webview/webview @ cbbdee4 (v0.12.x), MIT. Header-only; uses the Edge WebView2 runtime built into Windows 10/11.
