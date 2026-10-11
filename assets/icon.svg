@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#242e49"/>
+      <stop offset="1" stop-color="#0b0f17"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6f8fc"/>
+      <stop offset="1" stop-color="#9eabc9"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="58" fill="url(#bg)"/>
+  <rect x="3" y="3" width="250" height="250" rx="55" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="2"/>
+  <!-- ground line -->
+  <path d="M30 206 H226" stroke="#fff" stroke-opacity=".10" stroke-width="5" stroke-linecap="round"/>
+  <!-- soft-body car: a lattice of nodes and beams, nose slightly crumpled -->
+  <g stroke="url(#beam)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M40 152 L58 116 L100 100 L134 62 L172 66 L190 112 L222 130 L226 156 Z"/>
+    <path d="M40 152 L100 100 L190 112 L226 156 M100 100 L226 156 M134 62 L190 112 M190 112 L226 156" stroke-opacity=".5"/>
+  </g>
+  <!-- wheels -->
+  <g>
+    <circle cx="84" cy="172" r="26" fill="#0b0f17" stroke="#ffc933" stroke-width="10"/>
+    <circle cx="184" cy="172" r="26" fill="#0b0f17" stroke="#ffc933" stroke-width="10"/>
+    <circle cx="84" cy="172" r="7" fill="#ffc933"/>
+    <circle cx="184" cy="172" r="7" fill="#ffc933"/>
+  </g>
+  <!-- joints -->
+  <g fill="#0b0f17" stroke="#f6f8fc" stroke-width="5">
+    <circle cx="40" cy="152" r="9"/>
+    <circle cx="58" cy="116" r="9"/>
+    <circle cx="100" cy="100" r="9"/>
+    <circle cx="134" cy="62" r="9"/>
+    <circle cx="172" cy="66" r="9"/>
+    <circle cx="190" cy="112" r="9"/>
+    <circle cx="222" cy="130" r="9"/>
+    <circle cx="226" cy="156" r="9"/>
+  </g>
+</svg>

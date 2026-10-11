@@ -1,0 +1,42 @@
+[11/10/2026 14:14:56] [INFO] Mod caching directory: ./Resources
+[11/10/2026 14:14:56] [DEBUG] Launcher was invoked as: 'C:\Users\James\Downloads\beammp-launcher-offline\beammp-launcher\BeamMP-Launcher.exe --port 4444 --user-path C:\Users\James\AppData\Roaming\BeamMP-Manager\profiles\game-cff6\user --no-update -- -userpath C:\Users\James\AppData\Roaming\BeamMP-Manager\profiles\game-cff6\user'
+[11/10/2026 14:14:56] [DEBUG] Launcher Version : 2.8.1
+[11/10/2026 14:14:58] [INFO] Launcher version is up to date. Latest version: 2.8.1
+[11/10/2026 14:14:58] [INFO] IMPORTANT: You MUST keep this window open to play BeamMP!
+[11/10/2026 14:14:58] [DEBUG] Successfully parsed BeamNG.Drive.ini
+[11/10/2026 14:14:58] [DEBUG] GameDir from BeamNG.Drive.ini: E:\James-projects\steam\steamapps\common\beam2\BeamNG.drive\
+[11/10/2026 14:14:58] [DEBUG] HTTP Proxy listening on port 50046
+[11/10/2026 14:14:58] [INFO] Game Version : 0.39.4.0
+[11/10/2026 14:14:58] [DEBUG] Using custom user folder path: C:\Users\James\AppData\Roaming\BeamMP-Manager\profiles\game-cff6\user
+[11/10/2026 14:14:58] [DEBUG] Successfully parsed startup.ini
+[11/10/2026 14:14:58] [WARN] Found custom user folder path () in startup.ini but it doesn't exist, skipping
+[11/10/2026 14:14:58] [INFO] Game user path: C:\Users\James\AppData\Roaming\BeamMP-Manager\profiles\game-cff6\user\current
+[11/10/2026 14:14:58] [DEBUG] Core Network on start! port: 4444
+[11/10/2026 14:14:58] [DEBUG] BeamNG executable path: E:\James-projects\steam\steamapps\common\beam2\BeamNG.drive\BeamNG.drive.exe
+[11/10/2026 14:14:58] [INFO] Game Launched!
+[11/10/2026 14:15:27] [INFO] Game Connected!
+[11/10/2026 14:16:08] [INFO] Attempting to authenticate...
+[11/10/2026 14:16:09] [INFO] Authentication successful!
+[11/10/2026 14:16:09] [DEBUG] Authentication result: Welcome guest2569343
+[11/10/2026 14:16:12] [DEBUG] MAIN LOOP OF GAME SERVER
+[11/10/2026 14:16:12] [INFO] Connecting to server
+[11/10/2026 14:16:12] [INFO] Connected!
+[11/10/2026 14:16:13] [DEBUG] Mod info: [{"file_name":"RadialCheatMenu.zip","file_size":630234,"hash":"5dca7cea8a9fad7a9ef5154762b9d973aa7e1bc5ee99fdb305e9e1b8e8cc0aa2","hash_algorithm":"sha256","protected":false}]
+[11/10/2026 14:16:14] [INFO] Checking Resources...
+[11/10/2026 14:16:14] [INFO] Syncing...
+[11/10/2026 14:16:14] [DEBUG] Mod 'RadialCheatMenu-5dca7cea.zip' found in cache
+[11/10/2026 14:16:14] [DEBUG] Mod name: RadialCheatMenu.zip
+[11/10/2026 14:16:14] [INFO] Done!
+[11/10/2026 14:16:30] [DEBUG] (Proxy) Game Connected!
+[11/10/2026 14:16:30] [DEBUG] Starting UDP receive loop
+[11/10/2026 14:17:09] [DEBUG] zlib compressed 5591 B to 1698 B
+[11/10/2026 14:17:09] [DEBUG] (Launcher->Server) Bytes sent: 5591 : Os:0:{"proid":33039}
+[11/10/2026 14:17:24] [DEBUG] zlib compressed 485 B to 187 B
+[11/10/2026 14:20:55] [DEBUG] zlib compressed 7123 B to 1864 B
+[11/10/2026 14:20:55] [DEBUG] (Launcher->Server) Bytes sent: 7123 : Oc:0-0:{"jiiSKING"}}
+[11/10/2026 14:23:24] [DEBUG] zlib compressed 1090 B to 331 B
+[11/10/2026 14:23:24] [DEBUG] (Launcher->Server) Bytes sent: 1090 : Xg:0-0:["tnge_b_RR"]
+[11/10/2026 14:23:24] [DEBUG] zlib compressed 1364 B to 401 B
+[11/10/2026 14:23:24] [DEBUG] (Launcher->Server) Bytes sent: 1364 : Xg:0-0:["enge_b_RR"]
+[11/10/2026 14:23:27] [DEBUG] zlib compressed 1360 B to 405 B
+[11/10/2026 14:23:27] [DEBUG] (Launcher->Server) Bytes sent: 1360 : Xg:0-0:["enge_b_RR"]

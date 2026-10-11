@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    "cpp-httplib",
+    "nlohmann-json",
+    "zlib",
+    "openssl",
+    "curl"
+  ]
+}
